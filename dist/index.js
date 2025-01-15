@@ -27267,15 +27267,13 @@ async function run() {
         const type = coreExports.getInput('TYPE');
         const target = coreExports.getInput('TARGET').split(',');
         const gitBranch = coreExports.getInput('GIT_BRANCH');
-        const body = [
-            envVars.map((envVar) => ({
-                key: envVar.split('=')[0],
-                value: envVar.split('=')[1],
-                type,
-                target,
-                ...(gitBranch ? { gitBranch } : {})
-            }))
-        ];
+        const body = envVars.map((envVar) => ({
+            key: envVar.split('=')[0],
+            value: envVar.split('=')[1],
+            type,
+            target,
+            ...(gitBranch ? { gitBranch } : {})
+        }));
         coreExports.debug(`Upserting environment variables: ${JSON.stringify(body)}`);
         const res = await fetch(`https://api.vercel.com/v10/projects/${coreExports.getInput('VERCEL_PROJECT_ID', {
             required: true

@@ -30,15 +30,14 @@ export async function run(): Promise<void> {
     const type = core.getInput('TYPE')
     const target = core.getInput('TARGET').split(',')
     const gitBranch = core.getInput('GIT_BRANCH')
-    const body = [
-      envVars.map((envVar) => ({
-        key: envVar.split('=')[0],
-        value: envVar.split('=')[1],
-        type,
-        target,
-        ...(gitBranch ? { gitBranch } : {})
-      }))
-    ]
+    const body = envVars.map((envVar) => ({
+      key: envVar.split('=')[0],
+      value: envVar.split('=')[1],
+      type,
+      target,
+      ...(gitBranch ? { gitBranch } : {})
+    }))
+
     core.debug(`Upserting environment variables: ${JSON.stringify(body)}`)
     const res = await fetch(
       `https://api.vercel.com/v10/projects/${core.getInput(
