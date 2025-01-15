@@ -1,25 +1,61 @@
 import * as core from '@actions/core'
-import { wait } from './wait.js'
 
 /**
  * The main function for the action.
  *
  * @returns Resolves when the action is complete.
  */
+
+// await fetch("https://api.vercel.com/v10/projects/prj_XLKmu1DyR1eY7zq8UgeRKbA7yVLA/env?slug=SOME_STRING_VALUE&teamId=SOME_STRING_VALUE&upsert=true", {
+//   "body": {
+//     "key": "API_URL",
+//     "value": "https://api.vercel.com",
+//     "type": "plain",
+//     "target": [
+//       "preview"
+//     ],
+//     "gitBranch": "feature-1",
+//     "comment": "database connection string for production"
+//   },
+//   "headers": {
+//     "Authorization": "Bearer <TOKEN>"
+//   },
+//   "method": "post"
+// })
 export async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
-
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    core.debug(`Waiting ${ms} milliseconds ...`)
-
-    // Log the current timestamp, wait, then log the new timestamp
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
-
-    // Set outputs for other workflow steps to use
-    core.setOutput('time', new Date().toTimeString())
+    const envVars = core.getMultilineInput('VARS', {
+      required: true
+    })
+    const type = core.getInput('TYPE')
+    const target = core.getInput('TARGET').split(',')
+    const gitBranch = core.getInput('GIT_BRANCH')
+    const body = [
+      envVars.map((envVar) => ({
+        key: envVar.split('=')[0],
+        value: envVar.split('=')[1],
+        type,
+        target,
+        ...(gitBranch ? { gitBranch } : {})
+      }))
+    ]
+    await fetch(
+      `https://api.vercel.com/v10/projects/${core.getInput(
+        'VERCEL_PROJECT_ID',
+        {
+          required: true
+        }
+      )}/env?teamId=${core.getInput('VERCEL_ORG_ID', { required: true })}&upsert=true`,
+      {
+        body: JSON.stringify(body),
+        headers: {
+          Authorization: `Bearer ${core.getInput('VERCEL_TOKEN', { required: true })}`,
+          'Content-Type': 'application/json'
+        },
+        method: 'post'
+      }
+    )
+    core.info('Environment variables upserted successfully')
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)

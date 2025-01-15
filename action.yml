@@ -1,23 +1,26 @@
-name: The name of your action here
-description: Provide a description here
-author: Your name or organization here
+name: Vercel Env Upsert
+description: Upsert env vars to Vercel
+author: thomasgrastein
 
-# Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
-  icon: heart
-  color: red
+  icon: anchor
+  color: gray-dark
 
-# Define your inputs here.
 inputs:
-  milliseconds:
-    description: Your input description here
+  VARS:
     required: true
-    default: '1000'
-
-# Define your outputs here.
-outputs:
-  time:
-    description: Your output description here
+    description: Supports several
+  VERCEL_TOKEN:
+    required: true
+  VERCEL_ORG_ID:
+    required: true
+  VERCEL_PROJECT_ID:
+    required: true
+  TYPE:
+    default: 'plain'
+  TARGET:
+    default: 'preview'
+  GIT_BRANCH:
 
 runs:
   using: node20

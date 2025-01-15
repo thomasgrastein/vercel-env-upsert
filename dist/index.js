@@ -27239,35 +27239,54 @@ function requireCore () {
 var coreExports = requireCore();
 
 /**
- * Waits for a number of milliseconds.
- *
- * @param milliseconds The number of milliseconds to wait.
- * @returns Resolves with 'done!' after the wait is over.
- */
-async function wait(milliseconds) {
-    return new Promise((resolve) => {
-        if (isNaN(milliseconds))
-            throw new Error('milliseconds is not a number');
-        setTimeout(() => resolve('done!'), milliseconds);
-    });
-}
-
-/**
  * The main function for the action.
  *
  * @returns Resolves when the action is complete.
  */
+// await fetch("https://api.vercel.com/v10/projects/prj_XLKmu1DyR1eY7zq8UgeRKbA7yVLA/env?slug=SOME_STRING_VALUE&teamId=SOME_STRING_VALUE&upsert=true", {
+//   "body": {
+//     "key": "API_URL",
+//     "value": "https://api.vercel.com",
+//     "type": "plain",
+//     "target": [
+//       "preview"
+//     ],
+//     "gitBranch": "feature-1",
+//     "comment": "database connection string for production"
+//   },
+//   "headers": {
+//     "Authorization": "Bearer <TOKEN>"
+//   },
+//   "method": "post"
+// })
 async function run() {
     try {
-        const ms = coreExports.getInput('milliseconds');
-        // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-        coreExports.debug(`Waiting ${ms} milliseconds ...`);
-        // Log the current timestamp, wait, then log the new timestamp
-        coreExports.debug(new Date().toTimeString());
-        await wait(parseInt(ms, 10));
-        coreExports.debug(new Date().toTimeString());
-        // Set outputs for other workflow steps to use
-        coreExports.setOutput('time', new Date().toTimeString());
+        const envVars = coreExports.getMultilineInput('VARS', {
+            required: true
+        });
+        const type = coreExports.getInput('TYPE');
+        const target = coreExports.getInput('TARGET').split(',');
+        const gitBranch = coreExports.getInput('GIT_BRANCH');
+        const body = [
+            envVars.map((envVar) => ({
+                key: envVar.split('=')[0],
+                value: envVar.split('=')[1],
+                type,
+                target,
+                ...(gitBranch ? { gitBranch } : {})
+            }))
+        ];
+        await fetch(`https://api.vercel.com/v10/projects/${coreExports.getInput('VERCEL_PROJECT_ID', {
+            required: true
+        })}/env?teamId=${coreExports.getInput('VERCEL_ORG_ID', { required: true })}&upsert=true`, {
+            body: JSON.stringify(body),
+            headers: {
+                Authorization: `Bearer ${coreExports.getInput('VERCEL_TOKEN', { required: true })}`,
+                'Content-Type': 'application/json'
+            },
+            method: 'post'
+        });
+        coreExports.info('Environment variables upserted successfully');
     }
     catch (error) {
         // Fail the workflow run if an error occurs
