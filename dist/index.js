@@ -27276,7 +27276,8 @@ async function run() {
                 ...(gitBranch ? { gitBranch } : {})
             }))
         ];
-        await fetch(`https://api.vercel.com/v10/projects/${coreExports.getInput('VERCEL_PROJECT_ID', {
+        coreExports.debug(`Upserting environment variables: ${JSON.stringify(body)}`);
+        const res = await fetch(`https://api.vercel.com/v10/projects/${coreExports.getInput('VERCEL_PROJECT_ID', {
             required: true
         })}/env?teamId=${coreExports.getInput('VERCEL_ORG_ID', { required: true })}&upsert=true`, {
             body: JSON.stringify(body),
@@ -27286,6 +27287,12 @@ async function run() {
             },
             method: 'post'
         });
+        if (!res.ok) {
+            throw new Error(`Failed to upsert environment variables: ${res.statusText}`);
+        }
+        if (coreExports.isDebug()) {
+            coreExports.debug(`Response: ${JSON.stringify(await res.json())}`);
+        }
         coreExports.info('Environment variables upserted successfully');
     }
     catch (error) {
