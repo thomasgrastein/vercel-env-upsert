@@ -39,7 +39,8 @@ export async function run(): Promise<void> {
         ...(gitBranch ? { gitBranch } : {})
       }))
     ]
-    await fetch(
+    core.debug(`Upserting environment variables: ${JSON.stringify(body)}`)
+    const res = await fetch(
       `https://api.vercel.com/v10/projects/${core.getInput(
         'VERCEL_PROJECT_ID',
         {
@@ -55,6 +56,14 @@ export async function run(): Promise<void> {
         method: 'post'
       }
     )
+    if (!res.ok) {
+      throw new Error(
+        `Failed to upsert environment variables: ${res.statusText}`
+      )
+    }
+    if (core.isDebug()) {
+      core.debug(`Response: ${JSON.stringify(await res.json())}`)
+    }
     core.info('Environment variables upserted successfully')
   } catch (error) {
     // Fail the workflow run if an error occurs
