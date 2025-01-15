@@ -21,6 +21,7 @@ inputs:
   TARGET:
     default: 'preview'
   GIT_BRANCH:
+    default: ''
 
 runs:
   using: node20
